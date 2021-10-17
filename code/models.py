@@ -70,7 +70,7 @@ class MyBart(BartForConditionalGeneration):
         loss = None
         if labels is not None:
             loss_fct = nn.CrossEntropyLoss(reduce=False)
-            losses = loss_fct(lm_logits.view(-1, 21138),
+            losses = loss_fct(lm_logits.view(-1, self.config.vocab_size),
                               labels.view(-1))
             loss = torch.sum(losses * decoder_attention_mask.float().view(-1))
 

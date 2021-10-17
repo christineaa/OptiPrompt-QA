@@ -3,7 +3,7 @@
 OUTPUTS_DIR=optiprompt-outputs
 MODEL=fnlp/bart-base-chinese
 RAND=none
-REL=P2
+REL=P1
 
 
 DIR=${OUTPUTS_DIR}/${REL}
@@ -23,6 +23,7 @@ python code/run_optiprompt.py \
     --init_manual_template \
     --eval_per_epoch 1 \
     --num_epoch 20 \
+    --learning_rate 5e-3 \
     --freeze
 #    --debug
 

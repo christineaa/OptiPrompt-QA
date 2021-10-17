@@ -104,9 +104,9 @@ class QAData(object):
             "/".join(self.data_path.split("/")[:-1]),
             self.data_path.split("/")[-1].replace(
                 ".tsv" if self.data_path.endswith(".tsv") else ".json",
-                "{}{}-{}.json".format(
+                "{}-{}-{}.json".format(
                     "-uncased" if self.args.do_lowercase else "",
-                    "-xbos" if self.args.append_another_bos else "",
+                    self.args.relation,
                     postfix)))
         if self.load and os.path.exists(preprocessed_path):
             self.logger.info("Loading pre-tokenized data from {}".format(preprocessed_path))
@@ -114,7 +114,7 @@ class QAData(object):
                 input_ids, attention_mask, decoder_input_ids, decoder_attention_mask, \
                 metadata = json.load(f)
         else:
-            print("Start tokenizing...")
+            logger.info("Start tokenizing...")
             questions = [d["input_sentences"] for d in self.data]
             answers = [d["answer"] for d in self.data]
             answers, metadata = self.flatten(answers)
@@ -295,6 +295,7 @@ def prepare_for_dense_prompt(model):
     new_tokens = [get_new_token(i + 1) for i in range(MAX_NUM_VECTORS)]
     model.tokenizer.add_tokens(new_tokens)
     ebd = model.model.resize_token_embeddings(len(model.tokenizer))
+    model.model.config.vocab_size = len(model.tokenizer)
     logger.info('# vocab after adding new tokens: %d' % len(model.tokenizer))
 
 

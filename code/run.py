@@ -16,14 +16,11 @@ def run(args, logger):
     original_vocab_size = Model.tokenizer.vocab_size
     args.original_vocab_size = original_vocab_size
     logger.info('Original vocab size: %d' % original_vocab_size)
-    prepare_for_dense_prompt(Model)
-
-    if args.n_gpu > 1:
-        Model.model = torch.nn.DataParallel(Model.model)
-    if args.n_gpu > 0:
-        Model.model.to(torch.device("cuda"))
-
-    template = init_template(args, Model)
+    if args.relation != 'P0':
+        prepare_for_dense_prompt(Model)
+        template = init_template(args, Model)
+    else:
+        template = '[Q] [C]'
     logger.info('Template: %s' % template)
 
     if os.path.exists(os.path.join(args.output_dir, 'best-model.pth')):
@@ -39,12 +36,17 @@ def run(args, logger):
         with torch.no_grad():
             Model.base_model.shared.weight[original_vocab_size:] = torch.Tensor(vs)
 
+    if args.n_gpu > 1:
+        Model.model = torch.nn.DataParallel(Model.model)
+    if args.n_gpu > 0:
+        Model.model.to(torch.device("cuda"))
+
     if args.do_train:
         # Prepare train/valid data
         train_data = QAData(logger, args, args.train_data, True, template)
-        dev_data = QAData(logger, args, args.dev_data, False, template)
         train_data.load_dataset(Model.tokenizer)
         train_data.load_dataloader()
+        dev_data = QAData(logger, args, args.dev_data, False, template)
         dev_data.load_dataset(Model.tokenizer)
         dev_data.load_dataloader()
 
@@ -74,6 +76,7 @@ def run(args, logger):
     if args.do_eval:
         logger.info('***Evaluate***')
         Model = load_optiprompt(args)
+        Model.model.cuda()
         dev_data = QAData(logger, args, args.dev_data, False, template)
         dev_data.load_dataset(Model.tokenizer)
         dev_data.load_dataloader()
